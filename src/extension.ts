@@ -2,8 +2,32 @@ import * as vscode from "vscode";
 import * as literal from "./literal";
 import * as md from "./markdown";
 
+function makeLiteralHoverMessage(l: literal.Literal): vscode.MarkdownString | undefined {
+	const table = new md.MarkdownTableBuilder(["", ""]);
+	table.changeAlignments([md.Alignment.left, md.Alignment.right]);
+	switch (l.type) {
+		case literal.LiteralType.integer:
+			table.addRow([l.base === literal.LiteralBase.binary ? md.makeBold("BIN") : "BIN", md.makeCode(l.toString(literal.LiteralBase.binary))]);
+			table.addRow([l.base === literal.LiteralBase.octal ? md.makeBold("OCT") : "OCT", md.makeCode(l.toString(literal.LiteralBase.octal))]);
+			table.addRow([l.base === literal.LiteralBase.decimal ? md.makeBold("DEC") : "DEC", md.makeCode(l.toString(literal.LiteralBase.decimal))]);
+			table.addRow([l.base === literal.LiteralBase.hexadecimal ? md.makeBold("HEX") : "HEX", md.makeCode(l.toString(literal.LiteralBase.hexadecimal))]);
+			break;
+		case literal.LiteralType.float:
+			table.addRow([!l.literal.toLowerCase().includes("e") ? md.makeBold("DEC") : "DEC", md.makeCode(l.toString())]);
+			table.addRow([l.literal.toLowerCase().includes("e") ? md.makeBold("SCI") : "SCI", md.makeCode(l.toScientificNotation())]);
+			break;
+		default:
+			break;
+	}
+
+	if (table.bodyIsEmpty()) {
+		return;
+	}
+	return new vscode.MarkdownString(table.build());
+}
+
 function provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
-	const regex = literal.Literal.syntaxRegex();
+	const regex = literal.Literal.getSyntaxRegex();
 	const range = document.getWordRangeAtPosition(position, regex);
 	if (!range) {
 		return;
@@ -11,19 +35,9 @@ function provideHover(document: vscode.TextDocument, position: vscode.Position, 
 
 	const word = document.getText(range);
 	try {
-		const n = new literal.Literal(word);
-		if (n.type === literal.LiteralType.integer) {
-			const m = new md.MarkdownTableBuilder(["Base", "Value"]);
-			m.changeAlignments([md.Alignment.left, md.Alignment.right]);
-			m.addRow([n.base === literal.LiteralBase.binary ? "**BIN**" : "BIN", `\`${n.toBinary()}\``]);
-			m.addRow([n.base === literal.LiteralBase.octal ? "**OCT**" : "OCT", `\`${n.toOctal()}\``]);
-			m.addRow([n.base === literal.LiteralBase.decimal ? "**DEC**" : "DEC", `\`${n.toDecimal()}\``]);
-			m.addRow([n.base === literal.LiteralBase.hexadecimal ? "**HEX**" : "HEX", `\`${n.toHexadecimal()}\``]);
-			const hoverMessage = new vscode.MarkdownString(m.build());
-			return new vscode.Hover(hoverMessage);
-		} else {
-			return new vscode.Hover(word);
-		}
+		const l = new literal.Literal(word);
+		const hoverMessage = makeLiteralHoverMessage(l);
+		return hoverMessage ? new vscode.Hover(hoverMessage) : undefined;
 	} catch (e) {
 		console.log(e);
 	}

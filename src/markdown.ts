@@ -1,10 +1,3 @@
-export class AlignmentCountMismatchError extends Error {
-    constructor(expected: number, actual: number) {
-        super(`Alignment count mismatch. Expected ${expected} alignments, but got ${actual}.`);
-        this.name = "AlignmentCountMismatchError";
-    }
-}
-
 export class ColumnCountMismatchError extends Error {
     constructor(expected: number, actual: number) {
         super(`Column count mismatch. Expected ${expected} columns, but got ${actual}.`);
@@ -14,7 +7,7 @@ export class ColumnCountMismatchError extends Error {
 
 export class TableMustHaveRowsError extends Error {
     constructor() {
-        super("Table must have at least one row of data.");
+        super("Table body must have at least one row.");
         this.name = "TableMustHaveRowsError";
     }
 }
@@ -38,7 +31,7 @@ export class MarkdownTableBuilder {
 
     public changeAlignments(alignments: Alignment[]): void {
         if (alignments.length !== this.headers.length) {
-            throw new AlignmentCountMismatchError(this.headers.length, alignments.length);
+            throw new ColumnCountMismatchError(this.headers.length, alignments.length);
         }
         this.alignments = alignments;
     }
@@ -52,7 +45,7 @@ export class MarkdownTableBuilder {
     }
 
     public build(): string {
-        if (this.rows.length === 0) {
+        if (this.bodyIsEmpty()) {
             throw new TableMustHaveRowsError();
         }
 
@@ -73,4 +66,16 @@ export class MarkdownTableBuilder {
 
         return [headerRow, alignmentRow, ...bodyRows].join("\n");
     }
+
+    public bodyIsEmpty(): boolean {
+        return this.rows.length === 0 ? true : false;
+    }
+}
+
+export function makeBold(s: string) {
+    return `**${s}**`;
+}
+
+export function makeCode(s: string) {
+    return `\`${s}\``;
 }
