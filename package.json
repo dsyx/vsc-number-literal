@@ -6,6 +6,11 @@
   "version": "0.0.1",
   "publisher": "dsyx",
   "license": "MIT",
+  "keywords": [
+    "number",
+    "hover",
+    "converter"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/dsyx/number-literal.git"
@@ -21,7 +26,24 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": []
+    "commands": [
+      {
+        "command": "number-literal.convertToBinary",
+        "title": "Number Literal: Convert to Binary"
+      },
+      {
+        "command": "number-literal.convertToOctal",
+        "title": "Number Literal: Convert to Octal"
+      },
+      {
+        "command": "number-literal.convertToDecimal",
+        "title": "Number Literal: Convert to Decimal"
+      },
+      {
+        "command": "number-literal.convertToHexadecimal",
+        "title": "Number Literal: Convert to Hexadecimal"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

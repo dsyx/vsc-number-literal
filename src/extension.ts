@@ -44,15 +44,103 @@ function provideHover(document: vscode.TextDocument, position: vscode.Position, 
 	return;
 }
 
-export function activate(context: vscode.ExtensionContext) {
-	context.subscriptions.push(
-		vscode.languages.registerHoverProvider(
-			{ scheme: "file" },
-			{
-				provideHover,
+async function replaceUserInput(outputs: Array<string>) {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		return;
+	}
+
+	const selections = editor.selections;
+	if (outputs.length !== selections.length) {
+		return;
+	}
+
+	const document = editor.document;
+	const edit = new vscode.WorkspaceEdit();
+	const newSelections: vscode.Selection[] = [];
+	for (let i = 0; i < selections.length; i++) {
+		const selection = selections[i];
+		const output = outputs[i];
+
+		if (selection.isEmpty) {
+			const position = selection.active;
+			const regex = literal.Literal.getSyntaxRegex();
+			const range = document.getWordRangeAtPosition(position, regex);
+			if (range) {
+				edit.replace(document.uri, range, output);
+				newSelections.push(new vscode.Selection(range.start, range.start.translate(0, output.length)));
+			} else {
+				newSelections.push(selection);
 			}
-		)
-	);
+		} else {
+			edit.replace(document.uri, selection, output);
+			newSelections.push(new vscode.Selection(selection.start, selection.start.translate(0, output.length)));
+		}
+	}
+
+	await vscode.workspace.applyEdit(edit);
+	editor.selections = newSelections;
+}
+
+function getUserInput(): Array<string> {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		return [];
+	}
+
+	const document = editor.document;
+	const selections = editor.selections;
+	return selections.map((selection) => {
+		if (selection.isEmpty) {
+			const position = selection.active;
+			const regex = literal.Literal.getSyntaxRegex();
+			const range = document.getWordRangeAtPosition(position, regex);
+			if (range) {
+				return document.getText(range);
+			} else {
+				return "";
+			}
+		} else {
+			return document.getText(selection);
+		}
+	});
+}
+
+function literalConversionHandler(base: literal.LiteralBase): void {
+	const inputs = getUserInput();
+	if (inputs.length === 0) {
+		return;
+	}
+
+	try {
+		const outputs = inputs.map((input) => {
+			const l = new literal.Literal(input);
+			return l.type === literal.LiteralType.integer ? l.toString(base, true) : input;
+		});
+
+		replaceUserInput(outputs);
+	} catch (e) {
+		console.log(e);
+	}
+}
+
+export function activate(context: vscode.ExtensionContext) {
+	const disposables: Array<vscode.Disposable> = [];
+
+	const provider = vscode.languages.registerHoverProvider({ scheme: "file" }, { provideHover });
+	disposables.push(provider);
+
+	const commands = [
+		{ name: "number-literal.convertToBinary", callback: () => literalConversionHandler(literal.LiteralBase.binary) },
+		{ name: "number-literal.convertToOctal", callback: () => literalConversionHandler(literal.LiteralBase.octal) },
+		{ name: "number-literal.convertToDecimal", callback: () => literalConversionHandler(literal.LiteralBase.decimal) },
+		{ name: "number-literal.convertToHexadecimal", callback: () => literalConversionHandler(literal.LiteralBase.hexadecimal) }
+	];
+	commands.forEach(command => {
+		disposables.push(vscode.commands.registerCommand(command.name, command.callback));
+	});
+
+	context.subscriptions.push(...disposables);
 }
 
 export function deactivate() { }
