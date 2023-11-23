@@ -3,23 +3,23 @@
   "displayName": "Number Literal",
   "description": "A VSCode extension that can convert/hover different representations of Number Literal.",
   "icon": "resources/icons/logo.png",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "publisher": "dsyx",
   "license": "MIT",
-  "keywords": [
-    "number",
-    "hover",
-    "converter"
-  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/dsyx/number-literal.git"
+    "url": "https://github.com/dsyx/vsc-number-literal.git"
   },
   "engines": {
     "vscode": "^1.64.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "number",
+    "hover",
+    "converter"
   ],
   "activationEvents": [
     "onStartupFinished"
