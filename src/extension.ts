@@ -1,29 +1,28 @@
 import * as vscode from "vscode";
 import * as literal from "./literal";
-import * as md from "./markdown";
+import * as markdown from "./markdown";
 
 function makeLiteralHoverMessage(l: literal.Literal): vscode.MarkdownString | undefined {
-	const table = new md.MarkdownTableBuilder(["", ""]);
-	table.changeAlignments([md.Alignment.left, md.Alignment.right]);
+	const table = new markdown.Table(["", ""], [markdown.Alignment.left, markdown.Alignment.right]);
 	switch (l.type) {
 		case literal.LiteralType.integer:
-			table.addRow([l.base === literal.LiteralBase.binary ? md.makeBold("BIN") : "BIN", md.makeCode(l.toString(literal.LiteralBase.binary))]);
-			table.addRow([l.base === literal.LiteralBase.octal ? md.makeBold("OCT") : "OCT", md.makeCode(l.toString(literal.LiteralBase.octal))]);
-			table.addRow([l.base === literal.LiteralBase.decimal ? md.makeBold("DEC") : "DEC", md.makeCode(l.toString(literal.LiteralBase.decimal))]);
-			table.addRow([l.base === literal.LiteralBase.hexadecimal ? md.makeBold("HEX") : "HEX", md.makeCode(l.toString(literal.LiteralBase.hexadecimal))]);
+			table.addBody([l.base === literal.LiteralBase.binary ? new markdown.Text("BIN", markdown.Style.bold).toString() : "BIN", new markdown.Text(l.toString(literal.LiteralBase.binary), markdown.Style.code).toString()]);
+			table.addBody([l.base === literal.LiteralBase.octal ? new markdown.Text("OCT", markdown.Style.bold).toString() : "OCT", new markdown.Text(l.toString(literal.LiteralBase.octal), markdown.Style.code).toString()]);
+			table.addBody([l.base === literal.LiteralBase.decimal ? new markdown.Text("DEC", markdown.Style.bold).toString() : "DEC", new markdown.Text(l.toString(literal.LiteralBase.decimal), markdown.Style.code).toString()]);
+			table.addBody([l.base === literal.LiteralBase.hexadecimal ? new markdown.Text("HEX", markdown.Style.bold).toString() : "HEX", new markdown.Text(l.toString(literal.LiteralBase.hexadecimal), markdown.Style.code).toString()]);
 			break;
 		case literal.LiteralType.float:
-			table.addRow([!l.literal.toLowerCase().includes("e") ? md.makeBold("DEC") : "DEC", md.makeCode(l.toString())]);
-			table.addRow([l.literal.toLowerCase().includes("e") ? md.makeBold("SCI") : "SCI", md.makeCode(l.toScientificNotation())]);
+			table.addBody([!l.literal.toLowerCase().includes("e") ? new markdown.Text("DEC", markdown.Style.bold).toString() : "DEC", new markdown.Text(l.toString(), markdown.Style.code).toString()]);
+			table.addBody([l.literal.toLowerCase().includes("e") ? new markdown.Text("SCI", markdown.Style.bold).toString() : "SCI", new markdown.Text(l.toScientificNotation(), markdown.Style.code).toString()]);
 			break;
 		default:
 			break;
 	}
 
-	if (table.bodyIsEmpty()) {
+	if (table.isBodiesEmpty()) {
 		return;
 	}
-	return new vscode.MarkdownString(table.build());
+	return new vscode.MarkdownString(table.toString());
 }
 
 function provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
