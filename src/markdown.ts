@@ -77,17 +77,12 @@ export class Table {
       throw new Error("Headers should not be empty.");
     }
     if (alignments.length > headers.length) {
-      throw new Error(
-        `Alignments length should be at most ${headers.length}, but is ${alignments.length}.`
-      );
+      throw new Error(`Alignments length should be at most ${headers.length}, but is ${alignments.length}.`);
     }
 
     this.columnCount = headers.length;
     this.headers = headers;
-    this.alignments = Array.from(
-      { length: this.columnCount },
-      (_, i) => alignments[i] || Alignment.left
-    );
+    this.alignments = Array.from({ length: this.columnCount }, (_, i) => alignments[i] || Alignment.left);
     this.bodies = [];
   }
 
@@ -98,13 +93,8 @@ export class Table {
   public changeHeaders(headers: string[]): void {
     this.columnCount = headers.length;
     this.headers = headers;
-    this.alignments = Array.from(
-      { length: this.columnCount },
-      (_, i) => this.alignments[i] || Alignment.left
-    );
-    this.bodies = this.bodies.map((body) =>
-      Array.from({ length: this.columnCount }, (_, i) => body[i] || "")
-    );
+    this.alignments = Array.from({ length: this.columnCount }, (_, i) => this.alignments[i] || Alignment.left);
+    this.bodies = this.bodies.map((body) => Array.from({ length: this.columnCount }, (_, i) => body[i] || ""));
   }
 
   /**
@@ -114,15 +104,10 @@ export class Table {
    */
   public changeAlignments(alignments: Alignment[]): void {
     if (alignments.length > this.columnCount) {
-      throw new Error(
-        `Alignments length should be at most ${this.columnCount}, but is ${alignments.length}.`
-      );
+      throw new Error(`Alignments length should be at most ${this.columnCount}, but is ${alignments.length}.`);
     }
 
-    this.alignments = Array.from(
-      { length: this.columnCount },
-      (_, i) => alignments[i] || Alignment.left
-    );
+    this.alignments = Array.from({ length: this.columnCount }, (_, i) => alignments[i] || Alignment.left);
   }
 
   /**
@@ -132,14 +117,10 @@ export class Table {
    */
   public addBody(body: string[]): void {
     if (body.length > this.columnCount) {
-      throw new Error(
-        `Body length should be at most ${this.columnCount}, but is ${body.length}.`
-      );
+      throw new Error(`Body length should be at most ${this.columnCount}, but is ${body.length}.`);
     }
 
-    this.bodies.push(
-      Array.from({ length: this.columnCount }, (_, i) => body[i] || "")
-    );
+    this.bodies.push(Array.from({ length: this.columnCount }, (_, i) => body[i] || ""));
   }
 
   /**
@@ -188,11 +169,6 @@ export class Table {
 
   // Helper function to create the Markdown alignment row.
   private makeAlignmentRow(): string {
-    return this.makeRow(
-      Array.from(
-        { length: this.columnCount },
-        (_, i) => Table.alignmentMap[this.alignments[i]]
-      )
-    );
+    return this.makeRow(Array.from({ length: this.columnCount }, (_, i) => Table.alignmentMap[this.alignments[i]]));
   }
 }
