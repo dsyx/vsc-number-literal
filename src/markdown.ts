@@ -22,62 +22,47 @@ export const enum Alignment {
  * Represents a Markdown text.
  */
 export class Text {
-  private readonly text: string;
-  private readonly style: Style;
-
-  private static readonly styleMap: Record<Style, (text: string) => string> = {
-    [Style.regular]: (text) => text,
-    [Style.bold]: (text) => `**${text}**`,
-    [Style.italic]: (text) => `*${text}*`,
-    [Style.code]: (text) => `\`${text}\``,
-    [Style.strikethrough]: (text) => `~~${text}~~`,
-  };
-
   /**
    * Constructs a new Text instance.
    * @param text The text content.
    * @param style The style to apply (defaults to `Style.regular`).
    */
-  public constructor(text: string, style: Style = Style.regular) {
-    this.text = text;
-    this.style = style;
-  }
+  constructor(private readonly text: string, private readonly style: Style = Style.regular) {}
 
   /**
    * Returns the Markdown representation of the text with its applied style.
    */
-  public toString(): string {
-    return Text.styleMap[this.style](this.text);
+  toString(): string {
+    return this.styleMap[this.style];
   }
+
+  private readonly styleMap: Record<Style, string> = {
+    [Style.regular]: this.text,
+    [Style.bold]: `**${this.text}**`,
+    [Style.italic]: `*${this.text}*`,
+    [Style.code]: `\`${this.text}\``,
+    [Style.strikethrough]: `~~${this.text}~~`,
+  };
 }
 
 /**
  * Represents a Markdown table.
  */
 export class Table {
-  private columnCount: number;
-  private headers: string[];
-  private alignments: Alignment[];
-  private bodies: string[][];
-
-  private static readonly alignmentMap: Record<Alignment, string> = {
-    [Alignment.left]: ":---",
-    [Alignment.center]: ":---:",
-    [Alignment.right]: "---:",
-  };
-
   /**
    * Constructs a new Table instance.
    * @param headers An array of header strings.
    * @param alignments An optional array of column alignments.
    * @throws {Error} If headers is empty or alignments length exceeds headers length.
    */
-  public constructor(headers: string[], alignments: Alignment[] = []) {
+  constructor(headers: string[], alignments: Alignment[] = []) {
     if (headers.length === 0) {
-      throw new Error("Headers should not be empty.");
+      throw new Error("markdown.Table: headers cannot be empty");
     }
     if (alignments.length > headers.length) {
-      throw new Error(`Alignments length should be at most ${headers.length}, but is ${alignments.length}.`);
+      throw new Error(
+        `markdown.Table: alignments length exceeds headers length (${alignments.length} > ${headers.length})`
+      );
     }
 
     this.columnCount = headers.length;
@@ -90,7 +75,7 @@ export class Table {
    * Changes the table headers and adjusts alignments and bodies.
    * @param headers The new array of header strings.
    */
-  public changeHeaders(headers: string[]): void {
+  changeHeaders(headers: string[]): void {
     this.columnCount = headers.length;
     this.headers = headers;
     this.alignments = Array.from({ length: this.columnCount }, (_, i) => this.alignments[i] || Alignment.left);
@@ -102,9 +87,11 @@ export class Table {
    * @param alignments The new array of column alignments.
    * @throws {Error} If alignments length exceeds the number of columns.
    */
-  public changeAlignments(alignments: Alignment[]): void {
+  changeAlignments(alignments: Alignment[]): void {
     if (alignments.length > this.columnCount) {
-      throw new Error(`Alignments length should be at most ${this.columnCount}, but is ${alignments.length}.`);
+      throw new Error(
+        `markdown.Table: alignments length exceeds column count (${alignments.length} > ${this.columnCount})`
+      );
     }
 
     this.alignments = Array.from({ length: this.columnCount }, (_, i) => alignments[i] || Alignment.left);
@@ -115,9 +102,9 @@ export class Table {
    * @param body An array of strings representing a table row.
    * @throws {Error} If body length exceeds the number of columns.
    */
-  public addBody(body: string[]): void {
+  addBody(body: string[]): void {
     if (body.length > this.columnCount) {
-      throw new Error(`Body length should be at most ${this.columnCount}, but is ${body.length}.`);
+      throw new Error(`markdown.Table: body length exceeds column count (${body.length} > ${this.columnCount})`);
     }
 
     this.bodies.push(Array.from({ length: this.columnCount }, (_, i) => body[i] || ""));
@@ -127,7 +114,7 @@ export class Table {
    * Adds multiple rows to the table body.
    * @param bodies An array of arrays of strings, where each inner array represents a table row.
    */
-  public addBodies(bodies: string[][]): void {
+  addBodies(bodies: string[][]): void {
     for (const body of bodies) {
       this.addBody(body);
     }
@@ -136,7 +123,7 @@ export class Table {
   /**
    * Clears all rows from the table body.
    */
-  public clearBodies(): void {
+  clearBodies(): void {
     this.bodies = [];
   }
 
@@ -144,14 +131,14 @@ export class Table {
    * Checks if the table body is empty.
    * @returns `true` if the body is empty, `false` otherwise.
    */
-  public isBodiesEmpty(): boolean {
+  isBodiesEmpty(): boolean {
     return this.bodies.length === 0;
   }
 
   /**
    * Returns the Markdown representation of the table.
    */
-  public toString(): string {
+  toString(): string {
     if (this.isBodiesEmpty()) {
       return "";
     }
@@ -171,4 +158,15 @@ export class Table {
   private makeAlignmentRow(): string {
     return this.makeRow(Array.from({ length: this.columnCount }, (_, i) => Table.alignmentMap[this.alignments[i]]));
   }
+
+  private columnCount: number;
+  private headers: string[];
+  private alignments: Alignment[];
+  private bodies: string[][];
+
+  private static readonly alignmentMap: Record<Alignment, string> = {
+    [Alignment.left]: ":---",
+    [Alignment.center]: ":---:",
+    [Alignment.right]: "---:",
+  };
 }
