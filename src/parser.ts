@@ -2,6 +2,6 @@ import { Literal } from "./literal";
 
 export interface Parser {
   readonly supportedLanguages: string[];
-  getSyntaxRegex(): RegExp;
+  readonly wordRegex: RegExp | undefined;
   parse(text: string): Literal | undefined;
 }

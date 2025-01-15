@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 
-export function getUserInputs(editor: vscode.TextEditor, regex: RegExp): string[] {
+export function getUserInputs(editor: vscode.TextEditor, regex?: RegExp): string[] {
   return editor.selections.map((selection) => {
     const range = selection.isEmpty ? editor.document.getWordRangeAtPosition(selection.active, regex) : selection;
     return range ? editor.document.getText(range) : "";
   });
 }
 
-export async function replaceUserInputs(editor: vscode.TextEditor, regex: RegExp, replacements: string[]) {
+export async function replaceUserInputs(editor: vscode.TextEditor, replacements: string[], regex?: RegExp) {
   if (editor.selections.length !== replacements.length) {
     throw new Error(
       `replaceUserInputs: selection count mismatch (${editor.selections.length} != ${replacements.length})`

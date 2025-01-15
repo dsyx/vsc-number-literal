@@ -42,7 +42,7 @@ function makeHoverMessage(literal: Literal): vscode.MarkdownString | undefined {
 
 export function activate(context: vscode.ExtensionContext) {
   // Initialize Parsers
-  const parsers: Parser[] = [new DefaultParser()];
+  const parsers: Parser[] = [DefaultParser.getInstance()];
   const languageParserMap = new Map<string, Parser>();
   parsers.forEach((parser) => {
     parser.supportedLanguages.forEach((lang) => {
@@ -60,8 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
   ): vscode.ProviderResult<vscode.Hover> => {
     const parser = languageParserMap.get(document.languageId) ?? languageParserMap.get("*")!;
 
-    const regex = parser.getSyntaxRegex();
-    const range = document.getWordRangeAtPosition(position, regex);
+    const range = document.getWordRangeAtPosition(position, parser.wordRegex);
     if (!range) {
       return undefined;
     }
@@ -83,7 +82,7 @@ export function activate(context: vscode.ExtensionContext) {
   const convertCmdHandler = (editor: vscode.TextEditor, base: Base): void => {
     const parser = languageParserMap.get(editor.document.languageId) ?? languageParserMap.get("*")!;
 
-    const inputs = getUserInputs(editor, parser.getSyntaxRegex());
+    const inputs = getUserInputs(editor, parser.wordRegex);
     if (inputs.length === 0) {
       return;
     }
@@ -93,7 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
       return literal && literal.type === Type.int ? literal.toString(base, true) : input;
     });
 
-    replaceUserInputs(editor, parser.getSyntaxRegex(), outputs);
+    replaceUserInputs(editor, outputs, parser.wordRegex);
   };
 
   // Define the command handlers

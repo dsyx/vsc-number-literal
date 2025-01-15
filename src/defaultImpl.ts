@@ -33,10 +33,8 @@ class DefaultLiteral implements Literal {
 
 export class DefaultParser implements Parser {
   readonly supportedLanguages = ["*"];
-
-  getSyntaxRegex(): RegExp {
-    return DefaultParser.literalRegex;
-  }
+  readonly wordRegex =
+    /\b0[bB][01](_?[01])*\b|\b0[oO][0-7](_?[0-7])*\b|\b0[xX][0-9a-fA-F](_?[0-9a-fA-F])*\b|\b\d+([_,]?\d+)*(\.\d+([_,]?\d+)*)?([eE][-+]?\d+)?\b/;
 
   parse(text: string): Literal | undefined {
     const normalizedText = text.replace(/,|_/g, "");
@@ -50,14 +48,21 @@ export class DefaultParser implements Parser {
     return undefined;
   }
 
+  public static getInstance(): DefaultParser {
+    if (!DefaultParser.instance) {
+      DefaultParser.instance = new DefaultParser();
+    }
+    return DefaultParser.instance;
+  }
+
+  private constructor() {}
+
+  private static instance: DefaultParser;
   private static readonly intBinRegex = /^0[bB][01](_?[01])*$/;
   private static readonly intOctRegex = /^0[oO][0-7](_?[0-7])*$/;
-  private static readonly intDecRegex = /^(?!0[oOxXbB])\d+([_,]?\d+)*$/;
+  private static readonly intDecRegex = /^\d+([_,]?\d+)*$/;
   private static readonly intHexRegex = /^0[xX][0-9a-fA-F](_?[0-9a-fA-F])*$/;
   private static readonly fltDecRegex = /^\d+([_,]?\d+)*(\.\d+([_,]?\d+)*)?([eE][-+]?\d+)?$/;
-  private static readonly literalRegex =
-    /^(0[bB][01](_?[01])*|0[oO][0-7](_?[0-7])*|(?!0[oOxXbB])\d+([_,]?\d+)*|0[xX][0-9a-fA-F](_?[0-9a-fA-F])*|\d+([_,]?\d+)*(\.\d+([_,]?\d+)*)?([eE][-+]?\d+)?)$/;
-
   private static readonly parseHanders = [
     {
       regex: DefaultParser.intBinRegex,
